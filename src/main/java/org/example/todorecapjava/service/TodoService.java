@@ -1,5 +1,6 @@
 package org.example.todorecapjava.service;
 
+import org.example.todorecapjava.controller.WrongIdTodoNotFound;
 import org.example.todorecapjava.dto.TodoDto;
 import org.example.todorecapjava.model.Status;
 import org.example.todorecapjava.model.Todo;
@@ -24,8 +25,9 @@ public class TodoService {
         return repo.findAll();
     }
 
-    public Todo getTodoById(String id) {
-        return repo.findById(id).orElse(null);
+    public Todo getTodoById(String id) throws WrongIdTodoNotFound{
+        return repo.findById(id)
+                .orElseThrow(() -> new WrongIdTodoNotFound("Todo with id: " + id + " not found."));
     }
 
     public Todo createTodo(TodoDto todo) {
@@ -37,16 +39,17 @@ public class TodoService {
         return repo.save(newTodo);
     }
 
-    public Optional<Todo> updateTodo(TodoDto todo, String id) {
-        Todo oldTodo= repo.findById(id).orElse(null);
+    public Optional<Todo> updateTodo(TodoDto todo, String id) throws WrongIdTodoNotFound {
+        Todo oldTodo= repo.findById(id)
+                .orElseThrow(() -> new WrongIdTodoNotFound("Todo with id: " + id + " not found."));
         repo.save(oldTodo.withStatus(Status.valueOf(todo.status().toString()))
                 .withDescription(todo.description()));
         return repo.findById(id);
     }
 
-    public String deleteTodo(String id) {
+    public String deleteTodo(String id) throws WrongIdTodoNotFound{
         if(repo.findById(id).isEmpty()) {
-            return "Todo with id: " + id + " not found.";
+            throw new WrongIdTodoNotFound("Todo with id: " + id + " not found.");
         }
         repo.deleteById(id);
         return "Todo with id: " + id + " deleted successfully.";

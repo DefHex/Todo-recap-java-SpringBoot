@@ -7,8 +7,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(WrongIdTodoNotFound.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String NotFound(WrongIdTodoNotFound e) {
+        return e.getMessage();
+    }
+
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
     public String handleException(Exception e) {
         return e.getMessage();
     }
