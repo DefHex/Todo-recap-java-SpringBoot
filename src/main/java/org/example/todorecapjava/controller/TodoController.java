@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/todo")
+@RequestMapping("/api/todo")
 public class TodoController {
     private final TodoService service;
 
@@ -33,12 +33,12 @@ public class TodoController {
         return new ResponseEntity<>(service.createTodo(todo),HttpStatus.CREATED);
      }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Todo> updateTodo(@RequestBody TodoDto todo, @PathVariable String id) {
         return new ResponseEntity<>(service.updateTodo(todo,id).orElse(null), HttpStatus.ACCEPTED);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteTodo(@PathVariable String id) {
         return new ResponseEntity<>(service.deleteTodo(id),HttpStatus.RESET_CONTENT);
     }

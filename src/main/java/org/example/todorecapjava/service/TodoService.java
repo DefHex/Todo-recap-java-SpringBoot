@@ -15,10 +15,12 @@ public class TodoService {
 
     private final TodoRepository repo;
     private final IdService idService;
+    private final ChatGPTService chatGPTService;
 
-    public TodoService(TodoRepository todoRepository, IdService idService) {
+    public TodoService(TodoRepository todoRepository, IdService idService, ChatGPTService chatGPTService) {
         this.repo = todoRepository;
         this.idService = idService;
+        this.chatGPTService = chatGPTService;
     }
 
     public List<Todo> getAllTodos() {
@@ -30,9 +32,20 @@ public class TodoService {
                 .orElseThrow(() -> new WrongIdTodoNotFound("Todo with id: " + id + " not found."));
     }
 
-    public Todo createTodo(TodoDto todo) {
+    public Todo createTodo(TodoDto todo) throws IllegalArgumentException {
+        if (todo.description() == null || todo.description().isBlank()) {
+            throw new IllegalArgumentException("Description cannot be null or blank.");
+        }
+
+        String description=chatGPTService.replaceSpellingMistakesWhenCreatingTodo(todo)
+                .output()
+                .getFirst()
+                .content()
+                .getFirst()
+                .text();
+
         Todo newTodo = new Todo(
-                todo.description(),
+                description.isBlank() ? todo.description() : description,
                 idService.generateId(),
                 Status.valueOf(todo.status().toString())
         );
@@ -54,5 +67,4 @@ public class TodoService {
         repo.deleteById(id);
         return "Todo with id: " + id + " deleted successfully.";
     }
-
 }

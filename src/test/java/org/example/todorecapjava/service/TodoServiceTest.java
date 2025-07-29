@@ -4,6 +4,9 @@ import org.example.todorecapjava.controller.WrongIdTodoNotFound;
 import org.example.todorecapjava.dto.TodoDto;
 import org.example.todorecapjava.model.Todo;
 import org.example.todorecapjava.repository.TodoRepository;
+import org.example.todorecapjava.service.GPTapiModel.Content;
+import org.example.todorecapjava.service.GPTapiModel.Output;
+import org.example.todorecapjava.service.GPTapiModel.Response;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,7 +24,8 @@ class TodoServiceTest {
     void getTodoById_whenCorrectIdIsGiven() {
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId,mockChatGPT);
         Optional<Todo> response = Optional.of(todo1);
         when(mockRepo.findById(todo1.id())).thenReturn(response);
 
@@ -32,7 +36,8 @@ class TodoServiceTest {
     void getTodoById_whenWrongIdIsGiven() {
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId, mockChatGPT);
         assertThrows(WrongIdTodoNotFound.class, () -> todoService.getTodoById("WrongId"));
     }
 
@@ -43,7 +48,8 @@ class TodoServiceTest {
         TodoDto todoUpdatedDto = new TodoDto(todo1.description(), DONE);
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId,mockChatGPT);
         Optional<Todo> response = Optional.of(todo1);
         when(mockRepo.findById(todo1.id())).thenReturn(response);
         when(mockRepo.save(todoUpdated)).thenReturn(todoUpdated);
@@ -58,7 +64,8 @@ class TodoServiceTest {
         TodoDto todoUpdatedDto = new TodoDto(todo1.description(), DONE);
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId,mockChatGPT);
         assertThrows(WrongIdTodoNotFound.class, () -> todoService.updateTodo(todoUpdatedDto, "WrongId"));
     }
 
@@ -66,14 +73,16 @@ class TodoServiceTest {
     void deleteTodo_nonExistingTodo() {
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId,mockChatGPT);
         assertThrows(WrongIdTodoNotFound.class, () -> todoService.deleteTodo("WrongId"));
     }
     @Test
     void deleteTodo_ExistingTodo() {
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId,mockChatGPT);
         when(mockRepo.findById(todo1.id())).thenReturn(Optional.of(todo1));
         String expected = "Todo with id: " + todo1.id() + " deleted successfully.";
         String actual = todoService.deleteTodo(todo1.id());
@@ -98,11 +107,15 @@ class TodoServiceTest {
         when(mockId.generateId()).thenReturn("1");
 
         TodoRepository mockRepo = mock(TodoRepository.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId, mockChatGPT);
 
         Todo expectedTodo = new Todo(todoDto.description(), "1", todoDto.status());
         when(mockRepo.save(expectedTodo)).thenReturn(expectedTodo);
-
+        Response gptResponse = new Response(
+                List.of(new Output(List.of(new Content("Learn Java"))))
+        );
+        when(mockChatGPT.replaceSpellingMistakesWhenCreatingTodo(todoDto)).thenReturn(gptResponse);
         Todo actualTodo = todoService.createTodo(todoDto);
 
         assertEquals(expectedTodo, actualTodo);
@@ -113,7 +126,8 @@ class TodoServiceTest {
     void getAllTodos() {
         TodoRepository mockRepo = mock(TodoRepository.class);
         IdService mockId = mock(IdService.class);
-        TodoService todoService = new TodoService(mockRepo, mockId);
+        ChatGPTService mockChatGPT = mock(ChatGPTService.class);
+        TodoService todoService = new TodoService(mockRepo, mockId,mockChatGPT);
 
         when(mockRepo.findAll()).thenReturn(List.of(todo1));
 
